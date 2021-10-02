@@ -1,0 +1,32 @@
+{% macro render_form_field(field) %}
+<div class=mb-3>
+    {{ field.label(class="form-label") }}
+    {{ field(class="form-control", **kwargs)|safe }}
+    <div class=invalid-feedback>
+    {% if field.errors %}
+    {% for error in field.errors %}
+      <div>{{ error }}</div>
+    {% endfor %}
+    {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_form_radio(field) %}
+<div class=mb-3>
+    {{ field.label(class="form-label") }}
+      {% for subfield in field %}
+      <div class="form-check">
+        {{ subfield(class="form-check-input") }}
+        {{ subfield.label(class="form-check-label") }}
+      </div>
+      {% endfor %}
+    <div class=invalid-feedback>
+    {% if field.errors %}
+    {% for error in field.errors %}
+      <div>{{ error }}</div>
+    {% endfor %}
+    {% endif %}
+    </div>
+</div>
+{% endmacro %}
