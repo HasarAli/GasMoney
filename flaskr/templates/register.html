@@ -16,23 +16,30 @@
 {% endblock %}
 
 {% block main %}
-    <form id="register-form" novalidate action="/register" method="POST">
+    <form id="register-form" novalidate action="" method="POST">
         {{ form.hidden_tag() }}
 
         {% from "macros.html" import render_form_field, render_form_radio %}
         
-        {{ render_form_field(form.name, placeholder="First and Last Name", minlength=2) }}
+        {{ render_form_field(form.name, placeholder="Jane Doe", minlength=2) }}
+
+        {{ render_form_field(form.email, placeholder="j.doe@email.com", minlength=5) }}
         
         {{ render_form_radio(form.gender) }}
 
         {{ render_form_field(form.phone) }}
         
-        {{ render_form_field(form.password) }}
+        {{ render_form_field(form.password, placeholder="Must be at least 8 characters", minlength=8) }}
 
-        {{ render_form_field(form.confirm_password) }}
+        {{ render_form_field(form.confirm_password, placeholder="Re-type your password", minlength=8) }}
 
         {{ form.submit(class="btn btn-primary") }}
     </form>
+    <div class="d-flex justify-content-center border-top mt-2">
+        <small class="text-muted text-center mt-2">
+            Already have an account? <a href='{{url_for("login")}}'>Log In</a>
+        </small>
+    </div>
 {% endblock %}
 
 {% block script %}
@@ -52,7 +59,9 @@
                 event.stopPropagation();
             }
             form.classList.add('was-validated');
-            console.log("event: ", new FormData(event.target))
+            
+            // turn phone number into intl format before submission
+            phone.value = phoneInput.getNumber()
         });
 
         // live validation as input changes
@@ -87,6 +96,9 @@
             } else {
                 password.setCustomValidity('');
             }
+            
+            // update confirm password validity
+            confirmation.checkValidity();
         }
 
         const confirmation = document.querySelector("#confirm_password");
