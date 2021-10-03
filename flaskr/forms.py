@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
-from flask_wtf.recaptcha.fields import RecaptchaField
 from wtforms.fields.core import BooleanField, RadioField, StringField
 from wtforms.fields.simple import PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from wtforms.widgets.html5 import TelInput
+from wtforms.fields.html5 import EmailField, TelField
 import phonenumbers
 
 class FieldsRequiredForm(FlaskForm):
@@ -22,11 +22,10 @@ class FieldsRequiredForm(FlaskForm):
 class RegistrationForm(FieldsRequiredForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=24)])
     gender = RadioField('Gender', validators=[DataRequired()], choices=[('m', 'Male'), ('f', 'Female'), ('o', 'Other/Prefer Not Say')])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone = StringField('Phone Number', validators=[DataRequired()], widget=TelInput())
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    phone = TelField('Phone Number', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-    recaptcha = RecaptchaField()
 
     submit = SubmitField('Sign Up')
 
