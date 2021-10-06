@@ -21,17 +21,19 @@
 
         {% from "macros.html" import render_form_field, render_form_radio %}
         
-        {{ render_form_field(form.name, placeholder="Jane Doe", minlength=2) }}
+        {{ render_form_field(form.first_name, placeholder="James", maxlength="50") }}
+        
+        {{ render_form_field(form.last_name, placeholder="Doe", maxlength="50") }}
 
-        {{ render_form_field(form.email, placeholder="j.doe@email.com", minlength=5) }}
+        {{ render_form_field(form.email, placeholder="j.doe@email.com", maxlength="254") }}
         
         {{ render_form_radio(form.gender) }}
 
         {{ render_form_field(form.phone) }}
         
-        {{ render_form_field(form.password, placeholder="Must be at least 8 characters", minlength=8) }}
+        {{ render_form_field(form.password, placeholder="Must be at least 8 characters", minlength="8", maxlength="128") }}
 
-        {{ render_form_field(form.confirm_password, placeholder="Re-type your password", minlength=8) }}
+        {{ render_form_field(form.confirm_password, placeholder="Re-type your password") }}
 
         {{ form.submit(class="btn btn-primary") }}
     </form>

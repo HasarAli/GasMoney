@@ -20,11 +20,12 @@ class FieldsRequiredForm(FlaskForm):
 
 
 class RegistrationForm(FieldsRequiredForm):
-    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=24)])
+    first_name = StringField('First Name', validators=[DataRequired(), Length(max=50)])
+    last_name = StringField('Last Name', validators=[Length(max=50)])
     gender = RadioField('Gender', validators=[DataRequired()], choices=[('m', 'Male'), ('f', 'Female'), ('o', 'Other/Prefer Not Say')])
-    email = EmailField('Email', validators=[DataRequired(), Email()])
-    phone = TelField('Phone Number', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
+    email = EmailField('Email', validators=[DataRequired(), Length(max=254), Email()])
+    phone = TelField('Phone Number', validators=[DataRequired(), Length(max=15)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(max=128)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
 
     submit = SubmitField('Sign Up')
@@ -38,7 +39,7 @@ class RegistrationForm(FieldsRequiredForm):
             raise ValidationError('Invalid phone number')
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=254)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(max=128)])
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
