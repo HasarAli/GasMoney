@@ -7,4 +7,4 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gm.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-from flaskr import routes 
+from gasmoney import routes 

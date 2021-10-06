@@ -1,4 +1,4 @@
-from flaskr import db
+from gasmoney import db
 from datetime import datetime
 
 class Reservation(db.Model):

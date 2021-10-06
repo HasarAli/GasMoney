@@ -1,4 +1,4 @@
-from flaskr import app
+from gasmoney import app
 
 if __name__ == '__main__':
     app.run()
