@@ -2,6 +2,7 @@ from flask import render_template, redirect, flash
 from flask.helpers import url_for
 from flaskr import app
 from flaskr.forms import RegistrationForm
+from flaskr.models import User, Ride, Reservation
 
 @app.route('/')
 def index():
