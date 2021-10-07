@@ -2,9 +2,9 @@ from flask_wtf import FlaskForm
 from wtforms.fields.core import BooleanField, RadioField, StringField
 from wtforms.fields.simple import PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
-from wtforms.widgets.html5 import TelInput
 from wtforms.fields.html5 import EmailField, TelField
 import phonenumbers
+from gasmoney.models import User
 
 class FieldsRequiredForm(FlaskForm):
     """ https://github.com/wtforms/wtforms/issues/477#issuecomment-716417410
@@ -17,7 +17,6 @@ class FieldsRequiredForm(FlaskForm):
             if field.type == "_Option":
                 render_kw.setdefault("required", True)
             return super().render_field(field, render_kw)
-
 
 class RegistrationForm(FieldsRequiredForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(max=50)])
@@ -35,8 +34,20 @@ class RegistrationForm(FieldsRequiredForm):
             p = phonenumbers.parse(phone.data)
             if not phonenumbers.is_valid_number(p):
                 raise ValueError()
+            
+            user = User.query.filter_by(phone=phone.data).first()
+            if user:
+                raise Exception()
         except (phonenumbers.phonenumberutil.NumberParseException, ValueError):
             raise ValidationError('Invalid phone number')
+        except:
+            raise ValidationError('That phonenumber is already taken. Please use a different one')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('That email is already taken. Please use a different one')
+            
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=254)])

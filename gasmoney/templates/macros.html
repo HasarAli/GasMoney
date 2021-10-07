@@ -1,7 +1,8 @@
 {% macro render_form_field(field) %}
-<div class="mb-3 {{ 'was-validated' if field.errors }}">
+<div class="mb-3">
+    {% set class = "form-control is-invalid" if field.errors else "form-control" %}
     {{ field.label(class="form-label") }}
-    {{ field(class="form-control", **kwargs)|safe }}
+    {{ field(class=class, **kwargs)|safe }}
     <div class=invalid-feedback>
     {% if field.errors %}
       {% for error in field.errors %}
@@ -13,7 +14,8 @@
 {% endmacro %}
 
 {% macro render_form_radio(field) %}
-<div class="mb-3 {{ 'was-validated' if field.errors }}">
+<div class="mb-3">
+    {% set class = "form-check-input is-invalid" if field.errors else "form-check-input" %}
     {{ field.label(class="form-label") }}
       {% for subfield in field %}
       <div class="form-check">
