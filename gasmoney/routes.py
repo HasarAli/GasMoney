@@ -1,4 +1,4 @@
-from flask import render_template, redirect, flash
+from flask import render_template, redirect, flash, request
 from flask.helpers import url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 from gasmoney import app, db
@@ -34,13 +34,13 @@ def login():
         if user and check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
             flash('Login Successfull', 'success')
-            return redirect(url_for('index'))
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
             flash('Login Unsuccessfull. Please check email and password.', 'danger')
     return render_template("login.html", form=form)
 
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
