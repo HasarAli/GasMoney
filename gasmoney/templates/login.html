@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Login
+{% endblock %}
+
+{% block main %}
+    <form id="login-form" novalidate action="" method="POST">
+        {{ form.hidden_tag() }}
+
+        {% from "macros.html" import render_form_field %}
+
+        {{ render_form_field(form.email, maxlength="254") }}
+        
+        {{ render_form_field(form.password, minlength="8", maxlength="128") }}
+
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+    <div class="d-flex justify-content-center border-top mt-2">
+        <small class="text-muted text-center mt-2">
+            Don't have an account? <a href='{{url_for("register")}}'>Register</a>
+        </small>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        // validation at submition
+        const form = document.querySelector("#login-form");
+        form.addEventListener("submit", (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+
+        // live validation as input changes
+        form.addEventListener("input", (e) => {
+            const input = e.target;
+            input.checkValidity();
+
+            // getting container when/if field is nested
+            let container = input;
+            while(container.parentNode != form) {
+                container = container.parentNode;
+            }
+
+            container.classList.add("was-validated");
+            const error = container.querySelector(`.invalid-feedback`);
+            error.innerText = input.validationMessage;
+        });
+     </script>
+{% endblock %}
