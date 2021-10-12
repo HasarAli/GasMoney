@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from gasmoney import app, db
 from gasmoney.forms import RegistrationForm, LoginForm
 from gasmoney.models import User, Ride, Reservation
-from flask_login import login_user
+from flask_login import login_user, current_user, logout_user, login_required
 
 @app.route('/')
 def index():
@@ -12,6 +12,8 @@ def index():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_passowrd = generate_password_hash(form.password.data, method='pbkdf2:sha256', salt_length=16)
@@ -24,6 +26,8 @@ def register():
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -34,3 +38,9 @@ def login():
         else:
             flash('Login Unsuccessfull. Please check email and password.', 'danger')
     return render_template("login.html", form=form)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
