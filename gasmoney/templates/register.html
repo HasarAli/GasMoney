@@ -39,9 +39,7 @@
     </form>
     <div class="d-flex justify-content-center border-top mt-2">
         <small class="text-muted text-center mt-2">
-            {% with next_page = request.args.get('next') %}
-                Already have an account? <a href='{{ url_for("login", next=next_page) }}'>Log In</a>
-            {% endwith %}
+                Already have an account? <a href='{{ url_for("login", **request.args) }}'>Log In</a>
         </small>
     </div>
 {% endblock %}
