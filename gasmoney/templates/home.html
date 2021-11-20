@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block main %}
+    <form id="reservation-form" novalidate action="/rides" method="GET">
+        {{ form.hidden_tag() }}
+        
+        {% from "macros.html" import render_form_field %}
+
+        {{ render_form_field(form.origin, maxlength="254") }}
+        {{ render_form_field(form.destination, maxlength="254") }}
+        {{ render_form_field(form.departure_before_date, type="date") }}
+        {{ render_form_field(form.departure_before_time, type="time") }}
+        {{ render_form_field(form.seats_required, type="number", min="1", maxlength="2") }}
+        
+        
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+{% endblock %}
+
+{% block script %}
+    <script>
+        // validation at submition
+        const form = document.querySelector("#reservation-form");
+        form.addEventListener("submit", (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+
+        // live validation as input changes
+        form.addEventListener("input", (e) => {
+            const input = e.target;
+            input.checkValidity();
+
+            let container = input;
+
+            container.classList.add("was-validated");
+            const error = container.querySelector(`.invalid-feedback`);
+            error.innerText = input.validationMessage;
+        });
+     </script>
+{% endblock %}

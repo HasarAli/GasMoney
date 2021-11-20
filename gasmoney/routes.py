@@ -1,10 +1,16 @@
+from datetime import datetime
 from flask import render_template, redirect, flash, request
 from flask.helpers import url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 from gasmoney import app, db
-from gasmoney.forms import RegistrationForm, LoginForm
+from gasmoney.forms import RegistrationForm, LoginForm, ReservationForm
 from gasmoney.models import User, Ride, Reservation
 from flask_login import login_user, current_user, logout_user, login_required
+
+@app.route('/', methods=["GET", "POST"])
+def home():
+    form = ReservationForm(meta={'csrf': False})
+    return render_template("home.html", form=form)
 
 @app.route('/')
 def index():
@@ -13,7 +19,7 @@ def index():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('home'))
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_passowrd = generate_password_hash(form.password.data, method='pbkdf2:sha256', salt_length=16)
@@ -27,7 +33,7 @@ def register():
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('home'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -35,7 +41,7 @@ def login():
             login_user(user, remember=form.remember.data)
             flash('Login Successfull', 'success')
             next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('index'))
+            return redirect(next_page) if next_page else redirect(url_for('home'))
         else:
             flash('Login Unsuccessfull. Please check email and password.', 'danger')
     return render_template("login.html", form=form)
@@ -43,4 +49,4 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('home'))
