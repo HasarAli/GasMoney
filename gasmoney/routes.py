@@ -12,9 +12,32 @@ def home():
     form = ReservationForm(meta={'csrf': False})
     return render_template("home.html", form=form)
 
-@app.route('/')
-def index():
-    return render_template("layout.html")
+@app.route('/rides')
+def rides():
+    form = ReservationForm(request.args, meta={'csrf': False})
+    if not form.validate():
+        # TODO: POST invalid form to home page
+        flash('Invalid Request', 'danger')
+        return redirect(url_for('home'))
+
+    origin = form.origin.data
+    destination = form.destination.data
+    seats_required = form.seats_required.data
+    departure_dt = datetime.combine(
+        form.departure_before_date.data, 
+        form.departure_before_time.data)
+    
+    # TODO: order_by closest requested date
+    per_page = request.args['per_page'] or 20
+    page = request.args['page'] or 1
+
+    pagination = Ride.query.filter(
+        Ride.origin.contains(origin),
+        Ride.destination.contains(destination),
+        Ride.seats_available >= seats_required,
+        Ride.departure_dt >= departure_dt,
+    ).paginate(per_page=per_page, page=page, error_out=True)
+    return render_template("rides.html", pagination=pagination)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
