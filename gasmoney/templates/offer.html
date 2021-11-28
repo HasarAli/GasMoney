@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Offer Ride
+{% endblock %}
+
+{% block main %}
+    <form id="ride-form" novalidate action="" method="POST">
+        {{ form.hidden_tag() }}
+        
+        {% from "macros.html" import render_form_field %}
+
+        {{ render_form_field(form.origin, maxlength="254") }}
+        {{ render_form_field(form.destination, maxlength="254") }}
+        {{ render_form_field(form.rendezvous, maxlength="254") }}
+        {{ render_form_field(form.departure_date, type="date") }}
+        {{ render_form_field(form.departure_time, type="time") }}
+        {{ render_form_field(form.seats, type="number", min="1", maxlength="2") }}
+        
+        
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+{% endblock %}
+
+{% block script %}
+    <script>
+        // validation at submition
+        const form = document.querySelector("#login-form");
+        form.addEventListener("submit", (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+
+        // live validation as input changes
+        form.addEventListener("input", (e) => {
+            const input = e.target;
+            input.checkValidity();
+
+            // getting container when/if field is nested
+            let container = input;
+            while(container.parentNode != form) {
+                container = container.parentNode;
+            }
+
+            container.classList.add("was-validated");
+            const error = container.querySelector(`.invalid-feedback`);
+            error.innerText = input.validationMessage;
+        });
+     </script>
+{% endblock %}

@@ -61,8 +61,26 @@ class ReservationForm(FlaskForm):
     destination = StringField('To', validators=[DataRequired(), Length(max=254)])
     departure_before_date = DateField('Before date', validators=[DataRequired()])
     departure_before_time = TimeField('Before time', validators=[DataRequired()])
-    seats_required = IntegerField('Seats', validators=[DataRequired(), NumberRange(min=0)])
+    seats_required = IntegerField('Seats', validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField('Search')
+
+    def validate_departure_before_date(self, departure_before_date):       
+        if departure_before_date.data < date.today():
+            raise ValidationError('Selected date must be in the future')
+    
+    def validate_departure_before_time(self, departure_before_time):
+        dt_data = datetime.combine(self.departure_before_date.data, departure_before_time.data)
+        if dt_data < datetime.now():
+            raise ValidationError('Selected time must be in the future')
+
+class RideForm(FlaskForm):
+    origin = StringField('From', validators=[DataRequired(), Length(max=254)])
+    destination = StringField('To', validators=[DataRequired(), Length(max=254)])
+    rendezvous = StringField('Rendezvous', validators=[DataRequired(), Length(max=254)])
+    departure_date = DateField('Date', validators=[DataRequired()])
+    departure_time = TimeField('Time', validators=[DataRequired()])
+    seats = IntegerField('Seats', validators=[DataRequired(), NumberRange(min=1)])
+    submit = SubmitField('Add')
 
     def validate_departure_before_date(self, departure_before_date):       
         if departure_before_date.data < date.today():

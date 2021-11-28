@@ -3,7 +3,7 @@ from flask import render_template, redirect, flash, request
 from flask.helpers import url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 from gasmoney import app, db
-from gasmoney.forms import RegistrationForm, LoginForm, ReservationForm
+from gasmoney.forms import RegistrationForm, LoginForm, ReservationForm, RideForm
 from gasmoney.models import User, Ride, Reservation
 from flask_login import login_user, current_user, logout_user, login_required
 
@@ -38,6 +38,31 @@ def rides():
         Ride.departure_dt >= departure_dt,
     ).paginate(per_page=per_page, page=page, error_out=True)
     return render_template("rides.html", pagination=pagination)
+
+@app.route('/offer', methods=["GET", "POST"])
+@login_required
+def offer():
+    form = RideForm()
+    if form.validate_on_submit():
+        ride = Ride(
+            driver_id=current_user.id, 
+            origin=form.origin.data, 
+            destination=form.destination.data, 
+            rendezvous=form.rendezvous.data,
+            departure_dt=datetime.combine(
+                form.departure_date.data, 
+                form.departure_time.data), 
+            status="0",
+            seats_available=form.seats.data)
+        try:
+            db.session.add(ride)
+            db.session.commit()
+            flash('Ride Added Successfully', 'success')
+        except:
+            flash('Something Went Wrong. Try Again.', 'danger')
+            return redirect(url_for('offer'))
+        return redirect(url_for('home'))
+    return render_template("offer.html", form=form)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
