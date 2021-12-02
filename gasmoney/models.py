@@ -53,4 +53,4 @@ class Ride(db.Model):
     )
     
     def __repr__(self):
-        return f"Ride('{self.id}', {self.origin}', '{self.destination}', '{self.rendezvous}', '{self.departure_dt}, {self.status})"
+        return f"Ride('{self.id}', '{self.origin}', '{self.destination}', '{self.rendezvous}', '{self.departure_dt}, {self.status})"
