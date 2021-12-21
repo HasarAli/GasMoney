@@ -1,0 +1,12 @@
+include *.py
+include *.txt
+include lib64
+include pyvenv.cfg
+recursive-include bin *.8
+recursive-include bin *.csh
+recursive-include bin *.fish
+recursive-include bin *.ps1
+recursive-include gasmoney *.css
+recursive-include gasmoney *.db
+recursive-include gasmoney *.html
+recursive-include include *.h
