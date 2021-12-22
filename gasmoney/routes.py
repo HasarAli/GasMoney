@@ -28,11 +28,8 @@ def rides():
         form.departure_before_time.data)
     
     # TODO: order_by closest requested date
-    per_page = request.args.get('per_page') or 1
-    page = request.args.get('page') or 1
-
-    per_page = int(per_page)
-    page = int(page)
+    per_page = request.args.get('per_page', 20, type=int)
+    page = request.args.get('page', 1, type=int)
 
     pagination = Ride.query.filter(
         Ride.origin.contains(origin),
