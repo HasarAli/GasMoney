@@ -1,0 +1,7 @@
+.git
+.gitignore
+.dockerignore
+.flaskenv
+gm.db
+
+#!include:.gitignore
