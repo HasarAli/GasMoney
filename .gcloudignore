@@ -2,6 +2,7 @@
 .gitignore
 .dockerignore
 .flaskenv
+Dockerfile
 gm.db
 
 #!include:.gitignore
