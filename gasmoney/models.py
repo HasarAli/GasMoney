@@ -17,12 +17,12 @@ class Reservation(db.Model):
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(20), unique=True, nullable=False)
-    phone = db.Column(db.String(20), unique=True, nullable=False)
-    first_name = db.Column(db.String(20), nullable=False)
-    last_name = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(254), unique=True, nullable=False)
+    phone = db.Column(db.String(15), unique=True, nullable=False)
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name = db.Column(db.String(50), nullable=False)
     gender = db.Column(db.String(1), nullable=False)
-    password = db.Column(db.String(60), nullable=False)
+    password = db.Column(db.String(128), nullable=False)
     image_file = db.Column(db.String(20), nullable=False, default='default.jpg')
     register_dt = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
@@ -39,11 +39,11 @@ class User(db.Model, UserMixin):
 class Ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    origin = db.Column(db.String, nullable=False)
-    destination = db.Column(db.String, nullable=False)
-    rendezvous = db.Column(db.String, nullable=False)
+    origin = db.Column(db.String(258), nullable=False)
+    destination = db.Column(db.String(258), nullable=False)
+    rendezvous = db.Column(db.String(258), nullable=False)
     departure_dt = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.String, nullable=False)
+    status = db.Column(db.String(1), nullable=False)
     seats_available = db.Column(db.Integer, nullable=False, default=1)
 
     passengers = db.relationship(
