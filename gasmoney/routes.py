@@ -52,8 +52,7 @@ def offer():
             departure_dt=datetime.combine(
                 form.departure_date.data, 
                 form.departure_time.data), 
-            status="0",
-            seats_available=form.seats.data)
+            seats_offered=form.seats.data)
         try:
             db.session.add(ride)
             db.session.commit()

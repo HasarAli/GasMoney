@@ -43,13 +43,19 @@ class Ride(db.Model):
     destination = db.Column(db.String(258), nullable=False)
     rendezvous = db.Column(db.String(258), nullable=False)
     departure_dt = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.String(1), nullable=False)
-    seats_available = db.Column(db.Integer, nullable=False, default=1)
+    status = db.Column(db.String(1), nullable=False, default=0)
+    seats_offered = db.Column(db.Integer, nullable=False, default=1)
+    seats_available = column_property(
+        seats_offered -
+        select(func.coalesce(func.sum(Reservation.seats_reserved), 0)).
+        where(Reservation.ride_id==id).
+        scalar_subquery()
+    )
 
-    passengers = db.relationship(
+    reservations = db.relationship(
         'Reservation',
-        lazy=True,
-        backref=db.backref('ride', lazy=False)
+        lazy=False,
+        backref=db.backref('ride')
     )
     
     def __repr__(self):
