@@ -12,8 +12,8 @@
 
         {{ render_form_field(form.origin, maxlength="254") }}
         {{ render_form_field(form.destination, maxlength="254") }}
-        {{ render_form_field(form.departure_before_date, type="date") }}
-        {{ render_form_field(form.departure_before_time, type="time") }}
+        {{ render_form_field(form.departure_date, type="date") }}
+        {{ render_form_field(form.departure_time, type="time") }}
         {{ render_form_field(form.seats_required, type="number", min="1", maxlength="2") }}
         
         
