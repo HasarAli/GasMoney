@@ -16,14 +16,9 @@ FROM python:3-slim
 COPY --from=builder /GasMoney/venv /GasMoney/venv
 COPY --from=builder /GasMoney/gasmoney /GasMoney/gasmoney
 
-ENV ENV=PROD
-ENV SECRET_KEY=X
-ENV SQLALCHEMY_DATABASE_URI=X
-ENV SEND_GRID_API_KEY=X
-ENV TWILIO_API_KEY=X
-ENV TWILIO_API_SECRET=X
-ENV TWILIO_ACCOUNT_SID=X
-ENV TWILIO_VERIFY_SERVICE_SID=X 
+ENV FLASK_APP=gasmoney
+ENV FLASK_ENV=development
 
+# Make sure we use the virtualenv:
 ENV PATH="/GasMoney/venv/bin:$PATH"
-CMD [ "gunicorn", "-w", "1", "gasmoney:app" ]
+CMD [ "flask", "run", "--host=0.0.0.0" ]
