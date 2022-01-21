@@ -6,11 +6,6 @@
 
 {% block main %}
     {% from "macros.html" import render_rides, render_pagination %}
-    {{ render_rides(pagination.items) }}
+    {{ render_rides(pagination.items, current_user) }}
     {{ render_pagination(pagination, 'rides') }}
-{% endblock %}
-
-{% block script %}
-    <script>
-    </script>
 {% endblock %}

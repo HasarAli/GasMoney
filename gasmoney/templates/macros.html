@@ -76,7 +76,7 @@
 {% endif %}
 {% endmacro %}
 
-{% macro render_rides(rides) %}
+{% macro render_rides(rides, current_user) %}
   {% for ride in rides %}
     <div class="card m-2">
       <div class="card-body">
@@ -88,6 +88,20 @@
           <li>{{ride.seats_available}} seats available out of {{ride.seats_offered}}</li>
           <li>by <a href="{{url_for('profile', username=ride.driver.username)}}">{{ ride.driver.first_name }}</a></li>
         </ul>
+        <form action="" method="POST">
+          {% if ride.status == '1' %}
+          {% elif ride.status == '-1' %}
+            <button disabled class="btn btn-danger">Canceled</button>
+          {% elif ride.driver_id == current_user.id %}
+            <button type="submit" class="btn btn-success" formaction="/start-ride" name="ride_id" value="{{ ride.id }}">Start Ride</button>
+            <button type="submit" class="btn btn-danger" formaction="/cancel-ride" name="ride_id" value="{{ ride.id }}">Cancel Ride</button>
+          {% elif current_user.id in ride.reservations|map(attribute="passenger_id")  %}
+            <button type="submit" class="btn btn-danger" formaction="/cancel-reservation" name="ride_id" value="{{ ride.id }}">Cancel Reservation</button>
+          {% else %}
+            <input type="number" class="seats-required" name="seats_required" min="1" max="{{ ride.seats_available }}" value="1"/>
+            <button type="submit" class="btn btn-primary" formaction="/reserve" name="ride_id" value="{{ ride.id }}">Reserve</button>
+          {% endif %}
+        </form>
       </div>
     </div>
   {% endfor %}
