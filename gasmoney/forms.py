@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from flask_wtf import FlaskForm
 from wtforms.fields.core import BooleanField, DateField, IntegerField, RadioField, StringField, TimeField
+from flask_login import current_user
 from wtforms.fields.simple import PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange, ValidationError, Regexp, Optional
 from wtforms.fields.html5 import EmailField, TelField
@@ -131,8 +132,22 @@ class SettingsForm(FieldsRequiredForm):
             if user:
                 raise ValidationError("That username is already taken. Please use a different one")
 
+class RequestResetForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired(), Length(max=254), Email()])
+    submit = SubmitField('Request Password Reset')
+
+    def validate_email(self, email):
+        user = db.session.query(User.id).filter(User.email.ilike(email.data)).first()
+        if not user:
+            raise ValidationError('There is no account associated with that email.')
     
-    def validate_departure_before_time(self, departure_before_time):
-        dt_data = datetime.combine(self.departure_before_date.data, departure_before_time.data)
-        if dt_data < datetime.now():
-            raise ValidationError('Selected time must be in the future')
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired(), Length(max=128), 
+        Regexp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$', 
+        message="Your password must have minimum eight characters, \
+        at least one upper and one lower case English letter, \
+        one number, and one special character")])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+
+    submit = SubmitField('Reset Password')
+

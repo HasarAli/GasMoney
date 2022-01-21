@@ -2,17 +2,89 @@ from datetime import datetime, date, time
 from flask import render_template, redirect, flash, request
 from flask.helpers import url_for
 from werkzeug.security import check_password_hash, generate_password_hash
-from gasmoney import app, db
-from gasmoney.forms import RegistrationForm, LoginForm, ReservationForm, RideForm
+from gasmoney import app, db, twilio_verify_client, sendgrid_client
+from gasmoney.forms import (RegistrationForm, LoginForm, ReservationForm, 
+                            RideForm, SettingsForm, ResetPasswordForm, 
+                            RequestResetForm, VerifyPhoneForm)
 from gasmoney.models import User, Ride, Reservation
 from flask_login import login_user, current_user, logout_user, login_required, fresh_login_required
 from sqlalchemy import desc, or_
+from sendgrid.helpers.mail import Mail
+
 
 @app.route('/', methods=["GET", "POST"])
 def home():
     form = ReservationForm(meta={'csrf': False})
     return render_template("home.html", form=form)
 
+
+def send_reset_email(user):
+    token = user.get_token({'email': True})
+
+    mail = Mail(
+        from_email='GasMoney.Clients@simplelogin.co',
+        to_emails=user.email)
+    
+    mail.dynamic_template_data = {
+        'url': url_for("reset_token", token=token, _external=True)}
+    mail.template_id = 'd-cac7631c436c455d93360ab1af5826cf'
+
+    # Send an HTTP POST request to /mail/send
+    try:
+        response = sendgrid_client.send(mail)
+    except:
+        app.logger.exception('Reset email failed to send')
+        raise
+    
+    return response.status_code
+
+
+@app.route("/reset-password", methods=['GET', 'POST'])
+def request_reset():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        try:
+            send_reset_email(user)
+        except:
+            flash('Failed to send email', 'danger')
+            return redirect(url_for('settings'))
+        
+        flash('An email has been sent with instructions to reset your password.', 'info')
+        return redirect(url_for('login'))
+    return render_template('request_reset.html', title='Reset Password', form=form)
+
+
+@app.route("/reset-password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    
+    try:
+        user = User.verify_token(token, {'email' : True})
+    except:
+        flash('Token Is Invalid or Expired', 'warning')
+        return redirect(url_for('request_reset'))
+    
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = generate_password_hash(
+                form.password.data, method='pbkdf2:sha256', salt_length=16)
+        user.password = hashed_password
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            app.logger.exception('Reset Password Failed')
+            flash('Something Went Wrong. Try Again.', 'danger')
+            return redirect(request.referrer)
+        
+        flash('Password Reset Was Successfull', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('reset.html', form=form)
 
 
 @app.route('/settings', methods=["GET", "POST"])

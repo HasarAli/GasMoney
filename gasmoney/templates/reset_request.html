@@ -1,36 +1,25 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Login
+    Request Password Reset
 {% endblock %}
 
 {% block main %}
-    <form id="login-form" novalidate action="" method="POST">
+    <form id="request-reset-form" novalidate action="" method="POST">
         {{ form.hidden_tag() }}
 
         {% from "macros.html" import render_form_field %}
-
-        {{ render_form_field(form.email, maxlength="254") }}
         
-        {{ render_form_field(form.password, minlength="8", maxlength="128") }}
+        {{ render_form_field(form.email, placeholder="j.doe@email.com", maxlength="254") }}
 
         {{ form.submit(class="btn btn-primary") }}
-
-        <small class="text-muted mt-2">
-            <a href='{{ url_for("request_reset") }}'>Forgot password?</a>
-        </small>
     </form>
-    <div class="d-flex justify-content-center border-top mt-2">
-        <small class="text-muted text-center mt-2">
-            Don't have an account? <a href='{{ url_for("register", **request.args) }}'>Register</a>
-        </small>
-    </div>
 {% endblock %}
 
 {% block script %}
     <script>
-        // validation at submition
-        const form = document.querySelector("#login-form");
+        // validation at submission
+        const form = document.querySelector("#request-reset-form");
         form.addEventListener("submit", (event) => {
             if (!form.checkValidity()) {
                 event.preventDefault();

@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Reset Password
+{% endblock %}
+
+{% block main %}
+    <form id="reset-password-form" novalidate action="" method="POST">
+        {{ form.hidden_tag() }}
+
+        {% from "macros.html" import render_form_field %}
+        
+        {{ render_form_field(form.password, placeholder="Must be at least 8 characters", minlength="8", maxlength="128") }}
+
+        {{ render_form_field(form.confirm_password, placeholder="Re-type your password") }}
+
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+{% endblock %}
+
+{% block script %}
+    <script>
+        // validation at submission
+        const form = document.querySelector("#reset-password-form");
+        form.addEventListener("submit", (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+
+        // live validation as input changes
+        form.addEventListener("input", (e) => {
+            const input = e.target;
+            input.checkValidity();
+
+            // getting container when/if field is nested
+            let container = input;
+            while(container.parentNode != form) {
+                container = container.parentNode;
+            }
+
+            container.classList.add("was-validated");
+            const error = container.querySelector(`.invalid-feedback`);
+            error.innerText = input.validationMessage;
+        });
+
+        const password = document.querySelector("#password");
+        let rePassword = new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$');
+        password.checkValidity = () => {
+            if (!rePassword.test(password.value)) {
+                password.setCustomValidity('Your password must have minimum eight characters, at least one upper case English letter, one lower case English letter, one number and one special character');
+            } else {
+                password.setCustomValidity('');
+            }
+            
+            // update confirm password validity
+            confirmation.checkValidity();
+        }
+        
+        const confirmation = document.querySelector("#confirm_password");
+        confirmation.checkValidity = () => {
+            if (confirmation.value !== password.value) {
+                confirmation.setCustomValidity('Passwords do not match');
+            } else {
+                confirmation.setCustomValidity('');
+            }
+        }
+     </script>
+{% endblock %}
