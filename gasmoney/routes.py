@@ -1,4 +1,5 @@
 from datetime import datetime, date, time
+from functools import wraps
 from flask import render_template, redirect, flash, request
 from flask.helpers import url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -12,10 +13,76 @@ from sqlalchemy import desc, or_
 from sendgrid.helpers.mail import Mail
 
 
+def verification_required(func):
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return app.login_manager.unauthorized()
+        elif not current_user.is_email_verified:
+            flash('Must Verify Email First', 'warning')
+            return redirect(url_for('settings'))
+        return func(*args, **kwargs)
+    return decorated_view
+
+
 @app.route('/', methods=["GET", "POST"])
 def home():
     form = ReservationForm(meta={'csrf': False})
     return render_template("home.html", form=form)
+
+
+def send_verification_email(user):
+    token = user.get_token({'email verification': True})
+
+    mail = Mail(
+        from_email='GasMoney.Clients@simplelogin.co',
+        to_emails=user.email)
+    
+    mail.dynamic_template_data = {
+        'url': url_for("verify_email", token=token, _external=True)}
+    mail.template_id = 'd-c7db68935eab464492456b3b6f965177'
+
+    try:
+        response = sendgrid_client.send(mail)
+    except:
+        app.logger.exception('Confirmation email failed to send')
+        raise
+    
+    return response.status_code
+
+@app.route("/verify-email", methods=['POST'])
+@login_required
+def request_verify_email():
+    response_code = send_verification_email(current_user)
+
+    if int(response_code) > 299 :
+        flash('Failed to Send Confirmation Email', 'danger')
+        return redirect(url_for('settings'))
+        
+    flash('Confirmation Email sent', 'success')
+    return redirect(url_for('home'))
+    
+
+@app.route("/verify-email/<token>", methods=['GET'])
+@login_required
+def verify_email(token):
+    try:
+        user = User.verify_token(token, {'email verification' : True})
+    except:
+        flash('Token Is Invalid or Expired', 'warning')
+        return redirect(url_for('request_reset'))
+    
+    try:
+        user.is_email_verified = True
+        db.session.commit()
+    except:
+        db.session.rollback()
+        app.logger.exception('Failed to update email verification status')
+        flash('Something Went Wrong. Try Again.', 'danger')
+        return redirect(url_for('settings'))
+        
+    flash('Email Confirmation Was Successfull', 'success')
+    return redirect(url_for('home'))
 
 
 def send_reset_email(user):

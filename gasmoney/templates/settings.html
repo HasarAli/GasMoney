@@ -29,6 +29,9 @@
         
         {{ render_form_field(form.change_email, maxlength="254", placeholder=current_user.email) }}
 
+        {% if not current_user.is_email_verified %}
+            <button type="submit" class="btn btn-primary mb-3" formaction="{{ url_for('request_verify_email') }}" formnovalidate>Confirm Email Address</button>
+        {% endif %}
         
         {{ render_form_field(form.change_phone, placeholder=current_user.phone) }}
         
