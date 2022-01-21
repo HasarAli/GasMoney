@@ -61,7 +61,7 @@ class ReservationForm(FlaskForm):
     destination = StringField('To', validators=[Length(max=254)])
     departure_date = DateField('Date')
     departure_time = TimeField('Time')
-    seats_required = IntegerField('Seats', validators=[NumberRange(min=0)])
+    seats_required = IntegerField('Seats', validators=[NumberRange(min=1)])
     submit = SubmitField('Search')
 
 class RideForm(FlaskForm):

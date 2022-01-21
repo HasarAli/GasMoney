@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date, time
 from flask import render_template, redirect, flash, request
 from flask.helpers import url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -15,19 +15,14 @@ def home():
 @app.route('/rides')
 def rides():
     form = ReservationForm(request.args, meta={'csrf': False})
-    if not form.validate():
-        # TODO: POST invalid form to home page
-        flash('Invalid Request', 'danger')
-        return redirect(url_for('home'))
 
-    origin = form.origin.data
-    destination = form.destination.data
-    seats_required = form.seats_required.data
-    departure_dt = datetime.combine(
-        form.departure_before_date.data, 
-        form.departure_before_time.data)
+    origin = form.origin.data or ''
+    destination = form.destination.data or ''
+    seats_required = form.seats_required.data or 1
+    d = form.departure_date.data or date.today()
+    t = form.departure_time.data or time()
+    departure_dt = datetime.combine(d, t)
     
-    # TODO: order_by closest requested date
     per_page = request.args.get('per_page', 20, type=int)
     page = request.args.get('page', 1, type=int)
 
@@ -35,9 +30,11 @@ def rides():
         Ride.origin.contains(origin),
         Ride.destination.contains(destination),
         Ride.seats_available >= seats_required,
-        Ride.departure_dt <= departure_dt
-    ).paginate(per_page=per_page, page=page, error_out=True)
-    return render_template("rides.html", pagination=pagination)
+        Ride.departure_dt >= departure_dt,
+        Ride.status == 0
+        ).order_by(Ride.departure_dt). \
+        paginate(per_page=per_page, page=page, error_out=True)
+    return render_template("rides.html", pagination=pagination, current_user=current_user)
 
 @app.route('/offer', methods=["GET", "POST"])
 @login_required
