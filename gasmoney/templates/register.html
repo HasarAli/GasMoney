@@ -21,15 +21,17 @@
 
         {% from "macros.html" import render_form_field, render_form_radio %}
         
-        {{ render_form_field(form.first_name, placeholder="James", maxlength="50") }}
+        {{ render_form_field(form.first_name, placeholder="Julian", maxlength="50") }}
         
         {{ render_form_field(form.last_name, placeholder="Doe", maxlength="50") }}
-
-        {{ render_form_field(form.email, placeholder="j.doe@email.com", maxlength="254") }}
         
         {{ render_form_radio(form.gender) }}
-
+        
+        {{ render_form_field(form.email, placeholder="j.doe@email.com", maxlength="254") }}
+        
         {{ render_form_field(form.phone) }}
+        
+        {{ render_form_field(form.username, placeholder="jd42", minlength="4", maxlength="20") }}
         
         {{ render_form_field(form.password, placeholder="Must be at least 8 characters", minlength="8", maxlength="128") }}
 
@@ -91,9 +93,9 @@
         }
 
         const password = document.querySelector("#password");
-        let re = new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$');
+        let rePassword = new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$');
         password.checkValidity = () => {
-            if (!re.test(password.value)) {
+            if (!rePassword.test(password.value)) {
                 password.setCustomValidity('Your password must have minimum eight characters, at least one upper case English letter, one lower case English letter, one number and one special character');
             } else {
                 password.setCustomValidity('');
@@ -102,7 +104,7 @@
             // update confirm password validity
             confirmation.checkValidity();
         }
-
+        
         const confirmation = document.querySelector("#confirm_password");
         confirmation.checkValidity = () => {
             if (confirmation.value !== password.value) {
@@ -111,5 +113,16 @@
                 confirmation.setCustomValidity('');
             }
         }
-     </script>
+        
+        const username = document.querySelector("#username");
+        let reUsername = new RegExp('^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$');
+        username.checkValidity = () => {
+            if (!reUsername.test(username.value)) {
+                username.setCustomValidity(
+                    'Username must consist of 4-20 alphanumeric characters seperated by single dot or underscore');
+            } else {
+                username.setCustomValidity('');
+            }
+        }
+        </script>
 {% endblock %}
