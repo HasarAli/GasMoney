@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Confirm Phone Number
+{% endblock %}
+
+{% block main %}
+    <form id="verify-phone-form" novalidate action="" method="POST">
+        {{ form.hidden_tag() }}
+
+        {% from "macros.html" import render_form_field %}
+        
+        {{ render_form_field(form.code, placeholder="Enter the code you recieved", maxlength="6", minlength="6") }}
+
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+{% endblock %}
+
+{% block script %}
+    <script>
+        // validation at submission
+        const form = document.querySelector("#verify-phone-form");
+        form.addEventListener("submit", (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+
+        // live validation as input changes
+        form.addEventListener("input", (e) => {
+            const input = e.target;
+            input.checkValidity();
+
+            // getting container when/if field is nested
+            let container = input;
+            while(container.parentNode != form) {
+                container = container.parentNode;
+            }
+
+            container.classList.add("was-validated");
+            const error = container.querySelector(`.invalid-feedback`);
+            error.innerText = input.validationMessage;
+        });
+     </script>
+{% endblock %}

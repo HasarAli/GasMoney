@@ -34,6 +34,9 @@
         {% endif %}
         
         {{ render_form_field(form.change_phone, placeholder=current_user.phone) }}
+        {% if not current_user.is_phone_verified %}
+            <button type="submit" class="btn btn-primary mb-3" formaction="{{ url_for('request_verify_phone') }}" formnovalidate>Confirm Phone Number</button>
+        {% endif %}
         
         {{ render_form_field(form.username, minlength="4", maxlength="254") }}
         

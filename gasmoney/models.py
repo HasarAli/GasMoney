@@ -33,6 +33,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(128), nullable=False)
     image_link = db.Column(db.String(254), nullable=False, default='default.jpg')
     register_dt = db.Column(db.DateTime, nullable=False, default=get_utc)
+    is_email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    is_phone_verified = db.Column(db.Boolean, nullable=False, default=False)
     
     offered_rides = db.relationship('Ride', backref=db.backref('driver'))
     reservations = db.relationship('Reservation', backref=db.backref('passenger'))
@@ -40,7 +42,7 @@ class User(db.Model, UserMixin):
     def get_token(self, desc, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_sec)
         return s.dumps({'user_id': self.id, **desc}).decode('utf-8')
-    
+
     @staticmethod
     def verify_token(token, desc):
         s = Serializer(app.config['SECRET_KEY'])

@@ -31,6 +31,72 @@ def home():
     return render_template("home.html", form=form)
 
 
+def send_verification_text(user=current_user):
+    verification = twilio_verify_client \
+                     .verifications \
+                     .create(rate_limits={
+                         'user_id': user.id
+                     },to=user.phone, channel='sms')
+    app.logger.info('Verification SMS attempted: ', verification)
+    return verification.status
+
+
+def auth_phone_code(code, user=current_user):
+    verification_check = twilio_verify_client \
+                           .verification_checks \
+                           .create(to=user.phone, code=code)
+    app.logger.info('Auth of SMS code attempted: ', verification_check)
+    return verification_check.status
+
+
+@app.route("/verify-phone", methods=['GET', 'POST'])
+@login_required
+def verify_phone():
+    form = VerifyPhoneForm()
+    if form.validate_on_submit():
+        try:
+            status = auth_phone_code(form.code.data)
+        except:
+            app.loger.exception('Phone authentication failed')
+            flash('Something went wrong.', 'danger')
+            return(url_for('settings'))
+        if status == 'approved':
+            pass
+        elif status == 'pending':
+            flash('Wrong Code. Try Again.', 'warning')
+            return redirect(request.referrer)
+        elif status == 'canceled':
+            flash('Expired Code. Try Again.', 'warning')
+            return (url_for('settings'))
+            
+        
+        user = User.query.filter_by(id = current_user.id)
+        user.is_phone_verified = True
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            app.logger.exception('Failed to update phone verification status.')
+            flash('Something went wrong', 'danger')
+            return redirect(url_for('settings'))
+        
+        flash('Phone Number Verified', 'success')
+        return redirect(url_for('home'))
+    return render_template('verify_phone.html', form=form, is_phone_verified=current_user.is_phone_verified)
+
+
+@app.route("/request-verify-phone", methods=['POST'])
+@login_required
+def request_verify_phone():
+    status = send_verification_text()
+    if status != 'pending':
+        flash('Could Not Send Code', 'danger')
+        return redirect(request.referrer)
+    
+    flash('Code Sent', 'success')
+    return redirect(url_for('verify_phone')) 
+
+
 def send_verification_email(user):
     token = user.get_token({'email verification': True})
 
@@ -205,6 +271,107 @@ def profile(username):
 def current_user_profile():
     return redirect(url_for('profile', username=current_user.username))
 
+
+@app.route('/reserve', methods=["POST"])
+@verification_required
+def reserve():
+    seats_required = int(request.form.get("seats_required"))
+    if not seats_required > 0:
+        return flash('Could Not Reserve Seats', 'danger')
+    ride_id = request.form.get("ride_id")
+    ride = Ride.query.filter_by(id=ride_id).one()
+    if not ride:
+        flash('Ride Does Not Exist', 'danger')
+        return redirect(request.referrer)
+    elif seats_required > ride.seats_available:
+        flash('Seats Are Not Available', 'danger')
+        return redirect(request.referrer)
+    
+    reservation = Reservation(
+        ride_id=ride_id, 
+        passenger_id=current_user.id,
+        seats_reserved=seats_required
+        )
+    try:
+        db.session.add(reservation)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        app.logger.exception('Failed to add reservation')
+        flash('Reservation Failed', 'danger')
+        return redirect(request.referrer)
+    
+    flash('Reservation Created Successfully', 'success')
+    return redirect(url_for('current_user_profile'))
+
+
+@app.route('/cancel-reservation', methods=["POST"])
+@login_required
+def cancel_reservation():
+    ride_id = request.form.get("ride_id")
+    reservation = Reservation.query.filter(
+        Reservation.ride_id==ride_id, 
+        Reservation.passenger_id==current_user.id
+        ).first()
+    if not reservation:
+        flash('Reservation Does Not Exist', 'danger')
+        return redirect(request.referrer)
+    
+    try:
+        db.session.delete(reservation)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        app.logger.exception('failed to delete a reservation')
+        flash('Reservation Failed', 'danger')
+        return redirect(request.referrer)
+
+    flash('Reservation Deleted Successfully', 'success')
+    return redirect(url_for('current_user_profile'))
+
+
+@app.route('/cancel-ride', methods=["POST"])
+@login_required
+def cancel_ride():
+    ride_id = request.form.get("ride_id")
+    ride = Ride.query.filter(Ride.id==ride_id, Ride.driver_id==current_user.id, Ride.status==0).first()
+    if not ride:
+        flash('Ride Does Not Exist', 'danger')
+        return redirect(request.referrer)
+    try:
+        ride.status = -1
+        db.session.commit()
+    except:
+        db.session.rollback()
+        app.logger.exception('failed to update ')
+        flash('Ride Was Not Canceled', 'danger')
+        return redirect(request.referrer)
+
+    flash('Ride Cancelled Successfully', 'success')
+    return redirect(url_for('current_user_profile'))    
+
+
+@app.route('/start-ride', methods=["POST"])
+@login_required
+def start_ride():
+    ride_id = request.form.get("ride_id")
+    ride = Ride.query.filter(Ride.id==ride_id, Ride.driver_id==current_user.id, Ride.status==0).first()
+    if not ride:
+        flash('Ride Does Not Exist', 'danger')
+        return
+    try:
+        ride.status = 1
+        db.session.commit()
+    except:
+        db.session.rollback()
+        app.logger.exception('Failed to update ride status')
+        flash('Ride Was Not Started', 'danger')
+        return redirect(request.referrer)
+
+    flash('Ride Started Successfully', 'success')
+    return redirect(url_for('current_user_profile')) 
+
+
 @app.route('/rides')
 def rides():
     form = ReservationForm(request.args, meta={'csrf': False})
@@ -230,7 +397,7 @@ def rides():
     return render_template("rides.html", pagination=pagination, current_user=current_user)
 
 @app.route('/offer', methods=["GET", "POST"])
-@login_required
+@verification_required
 def offer():
     form = RideForm()
     if form.validate_on_submit():
@@ -246,11 +413,15 @@ def offer():
         try:
             db.session.add(ride)
             db.session.commit()
-            flash('Ride Added Successfully', 'success')
         except:
-            flash('Something Went Wrong. Try Again.', 'danger')
+            db.session.rollback()
+            app.logger.exception('failed to offer ride')
+            flash('Something Went Wrong', 'danger')
             return redirect(url_for('offer'))
-        return redirect(url_for('home'))
+        
+        flash('Ride Added Successfully', 'success')
+        return redirect(url_for('current_user_profile'))
+    
     return render_template("offer.html", form=form)
 
 @app.route("/register", methods=["GET", "POST"])
@@ -259,8 +430,16 @@ def register():
         return redirect(url_for('home'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        hashed_passowrd = generate_password_hash(form.password.data, method='pbkdf2:sha256', salt_length=16)
-        user = User(email=form.email.data, phone=form.phone.data, first_name=form.first_name.data, last_name=form.last_name.data, gender=form.gender.data, password=hashed_passowrd)
+        hashed_password = generate_password_hash(form.password.data, method='pbkdf2:sha256', salt_length=16)
+        user = User(
+            first_name=form.first_name.data, 
+            last_name=form.last_name.data, 
+            gender=form.gender.data, 
+            username=form.username.data,
+            email=form.email.data, 
+            phone=form.phone.data, 
+            password=hashed_password
+            )
         db.session.add(user)
         db.session.commit()
         flash('Account Created Successfully', 'success')

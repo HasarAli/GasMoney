@@ -58,7 +58,7 @@ class RegistrationForm(FieldsRequiredForm):
         user = db.session.query(User.id).filter(User.email.ilike(email.data)).first()
         if user:
             raise ValidationError('That email is already taken. Please use a different one')
-            
+
     def validate_username(self, username):
         user = db.session.query(User.id).filter(User.username.ilike(username.data)).first()
         if user:
@@ -140,7 +140,7 @@ class RequestResetForm(FlaskForm):
         user = db.session.query(User.id).filter(User.email.ilike(email.data)).first()
         if not user:
             raise ValidationError('There is no account associated with that email.')
-    
+
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(max=128), 
         Regexp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$', 
@@ -151,3 +151,7 @@ class ResetPasswordForm(FlaskForm):
 
     submit = SubmitField('Reset Password')
 
+class VerifyPhoneForm(FlaskForm):
+    code = StringField('Code', validators=[ DataRequired(),
+                                            Regexp('^\d{6}$', message="Please enter 6 digits")])
+    submit = SubmitField('Verify')

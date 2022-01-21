@@ -17,4 +17,11 @@ login_manager.login_message_category = 'info'
 
 sendgrid_client = SendGridAPIClient(api_key=app.config['SEND_GRID_API_KEY'])
 
+twilio_verify_client = TwilioClient(app.config['TWILIO_API_KEY'], 
+                            app.config['TWILIO_API_SECRET'], 
+                            app.config['TWILIO_ACCOUNT_SID']) \
+                            .verify.services(
+                              app.config['TWILIO_VERIFY_SERVICE_SID']
+                            )
+
 from gasmoney import routes
