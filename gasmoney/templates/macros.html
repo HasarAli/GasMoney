@@ -78,14 +78,15 @@
 
 {% macro render_rides(rides) %}
   {% for ride in rides %}
-    <div class="card">
+    <div class="card m-2">
       <div class="card-body">
         <h5 class="card-subtitle"><small>from</small> {{ride.origin}}</h2>
         <h1 class="card-title"><small>to</small> {{ride.destination}}</h1>
         <ul>
           <li>meeting at {{ride.rendezvous}}</li>
           <li>departing at {{ride.departure_dt}}</li>
-          <li>{{ride.seats_available}} seats available</li>
+          <li>{{ride.seats_available}} seats available out of {{ride.seats_offered}}</li>
+          <li>by <a href="{{url_for('profile', username=ride.driver.username)}}">{{ ride.driver.first_name }}</a></li>
         </ul>
       </div>
     </div>

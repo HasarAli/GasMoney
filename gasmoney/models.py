@@ -18,6 +18,7 @@ class Reservation(db.Model):
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(254), unique=True, nullable=False)
+    username = db.Column(db.String(32), unique=True, nullable=False)
     phone = db.Column(db.String(15), unique=True, nullable=False)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)

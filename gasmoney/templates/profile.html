@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ user.first_name }}'s Profile
+{% endblock %}
+
+{% block main %}
+    <div class="left">
+        <h3>{{user.first_name}} {{ user.last_name }}</h3>
+        <h6>{{user.phone}}</h6>
+    </div>
+    <div class="center">
+        <h1>My Rides</h1>
+        {% from "macros.html" import render_rides, render_pagination %}
+        {{ render_rides(pagination.items, current_user) }}
+        {{ render_pagination(pagination, 'rides') }}
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+    </script>
+{% endblock %}

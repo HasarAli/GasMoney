@@ -5,12 +5,33 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from gasmoney import app, db
 from gasmoney.forms import RegistrationForm, LoginForm, ReservationForm, RideForm
 from gasmoney.models import User, Ride, Reservation
-from flask_login import login_user, current_user, logout_user, login_required
+from flask_login import login_user, current_user, logout_user, login_required, fresh_login_required
+from sqlalchemy import desc, or_
 
 @app.route('/', methods=["GET", "POST"])
 def home():
     form = ReservationForm(meta={'csrf': False})
     return render_template("home.html", form=form)
+
+
+@app.route("/users/<username>")
+@login_required
+def profile(username):
+    user = User.query.filter(User.username.ilike(username)).first()
+    if not user:
+        flash('User Not Found', 'danger')
+        return redirect(url_for('home'))
+    pagination = Ride.query.filter(or_(
+        Ride.reservations.any(passenger_id=user.id),
+        Ride.driver_id == user.id
+    )).order_by(desc(Ride.departure_dt)).paginate()
+    return render_template("profile.html", user=user, pagination=pagination, current_user=current_user)
+
+
+@app.route("/users/")
+@login_required
+def current_user_profile():
+    return redirect(url_for('profile', username=current_user.username))
 
 @app.route('/rides')
 def rides():
