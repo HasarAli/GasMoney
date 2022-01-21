@@ -14,6 +14,39 @@ def home():
     return render_template("home.html", form=form)
 
 
+
+@app.route('/settings', methods=["GET", "POST"])
+@fresh_login_required
+def settings():
+    user = User.query.filter_by(id=current_user.id).first()
+    form = SettingsForm(obj=user)
+    if form.validate_on_submit():
+        form.populate_obj(user)
+        print(user)
+        if form.change_password.data:
+            hashed_password = generate_password_hash(
+                form.change_password.data, method='pbkdf2:sha256', salt_length=16)
+            user.password = hashed_password
+        if form.change_email.data:
+            user.is_email_verified = False
+            user.email = form.change_email.data
+        if form.change_phone.data:
+            user.is_phone_verified = False
+            user.phone = form.change_phone.data
+            
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            app.logger.exception('Failed to update user info')
+            flash('Failed To Update Your Information', 'danger')
+            return redirect(request.referrer)
+        
+        flash('Updated Your Information Successfully', 'success')
+        return redirect(url_for('home'))
+    return render_template("settings.html", form=form, current_user=current_user)
+
+
 @app.route("/users/<username>")
 @login_required
 def profile(username):

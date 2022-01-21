@@ -1,0 +1,130 @@
+{% extends "layout.html" %}
+
+{% block link %}
+    <link
+     rel="stylesheet"
+     href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"
+   />
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+   <style>
+       .iti.iti--allow-dropdown { width: 100% }
+   </style>
+{% endblock %}
+
+{% block title %}
+    Settings
+{% endblock %}
+
+{% block main %}
+    <form id="settings-form" novalidate method="POST">
+        {{ form.hidden_tag() }}
+
+        {% from "macros.html" import render_form_field, render_form_radio %}
+        
+        {{ render_form_field(form.first_name, maxlength="50") }}
+        
+        {{ render_form_field(form.last_name, maxlength="50") }}
+        
+        {{ render_form_radio(form.gender) }}
+        
+        {{ render_form_field(form.change_email, maxlength="254", placeholder=current_user.email) }}
+
+        
+        {{ render_form_field(form.change_phone, placeholder=current_user.phone) }}
+        
+        {{ render_form_field(form.username, minlength="4", maxlength="254") }}
+        
+        {{ render_form_field(form.change_password, placeholder="Change your password", minlength="8", maxlength="128") }}
+
+        {{ render_form_field(form.confirm_password, placeholder="Re-type your password") }}
+
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+{% endblock %}
+
+{% block script %}
+    <script>
+       const phone = document.querySelector("#change_phone");
+       const phoneInput = window.intlTelInput(phone, {
+         preferredCountries: ["ca", "us"],
+         utilsScript:
+           "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+       });
+
+        // validation at submission
+        const form = document.querySelector("#settings-form");
+        form.addEventListener("submit", (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+            
+            // turn phone number into intl format before submission
+            phone.value = phoneInput.getNumber()
+        });
+
+        // live validation as input changes
+        form.addEventListener("input", (e) => {
+            const input = e.target;
+            input.checkValidity();
+            
+            // getting container when/if field is nested
+            let container = input;
+            while(container.parentNode != form) {
+                container = container.parentNode;
+            }
+            
+            if (input.value === '') {
+                container.classList.remove("was-validated")
+            } else {
+                container.classList.add("was-validated");
+                const error = container.querySelector(`.invalid-feedback`);
+                error.innerText = input.validationMessage;
+            }
+        });
+
+        phone.checkValidity = () => {
+            if (!phoneInput.isValidNumber()) {
+                phone.setCustomValidity('Enter a valid phonenumber');
+            } else {
+                phone.setCustomValidity('');
+            }
+        }
+
+        const password = document.querySelector("#change_password");
+        let rePassword = new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$');
+        password.checkValidity = () => {
+            if (!rePassword.test(password.value)) {
+                password.setCustomValidity('Your password must have minimum eight characters, at least one upper case English letter, one lower case English letter, one number and one special character');
+            } else {
+                password.setCustomValidity('');
+            }
+            
+            // update confirm password validity
+            confirmation.checkValidity();
+        }
+        
+        const confirmation = document.querySelector("#confirm_password");
+        confirmation.checkValidity = () => {
+            if (confirmation.value !== password.value) {
+                confirmation.setCustomValidity('Passwords do not match');
+            } else {
+                confirmation.setCustomValidity('');
+            }
+        }
+        
+        const username = document.querySelector("#username");
+        let reUsername = new RegExp('^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$');
+        username.checkValidity = () => {
+            console.log(username.value)
+            if (!reUsername.test(username.value)) {
+                username.setCustomValidity(
+                    'Username must consist of 4-20 alphanumeric characters seperated by single dot or underscore');
+            } else {
+                username.setCustomValidity('');
+            }
+        }
+
+     </script>
+{% endblock %}
